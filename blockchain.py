@@ -3,7 +3,7 @@ import json
 
 from time import time
 from uuid import uuid4
-from textwrap import dedent
+
 from flask import Flask, jsonify, request
 
 class Blockchain(object):
