@@ -80,7 +80,7 @@ class Blockchain(object):
         """
         
         parsed_url = urlparse(address)
-        self.nodes.add(parse_url.netloc)
+        self.nodes.add(parsed_url.netloc)
 
     def valid_chain(self, chain):
         """
@@ -88,6 +88,7 @@ class Blockchain(object):
         :param chain: <list> A blockchain
         :return: <bool> True if valid, False if not
         """
+
         last_block = chain[0]
         current_index = 1
 
@@ -208,6 +209,41 @@ def new_transaction():
 
     response =  {'message': f'Transaction will be added to Block {index}'}
     return jsonify(response), 201
+
+@app.route('/nodes/register', methods=['POST'])
+def register_nodes():
+    values = request.get_json()
+
+    nodes = values.get('nodes')
+    if nodes is None:
+        return "Error: Please supply a valid list of nodes", 400
+
+    for node in nodes:
+        blockchain.register_node(node)
+
+    response = {
+        'message': 'New nodes have been added',
+        'total_nodes': list(blockchain.nodes),
+    }
+    return jsonify(response), 201
+
+
+@app.route('/nodes/resolve', methods=['GET'])
+def consensus():
+    replaced = blockchain.resolve_conflicts()
+
+    if replaced:
+        response = {
+            'message': 'Our chain was replaced',
+            'new_chain': blockchain.chain
+        }
+    else:
+        response = {
+            'message': 'Our chain is authoritative',
+            'chain': blockchain.chain
+        }
+
+    return jsonify(response), 200
 
 @app.route('/chain', methods=['GET'])
 def full_chain():
